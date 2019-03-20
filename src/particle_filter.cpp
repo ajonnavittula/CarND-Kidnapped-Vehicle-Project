@@ -50,13 +50,10 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     particle.x = dist_x(gen);
     particle.y = dist_x(gen);
     particle.theta = dist_theta(gen);
-    particle.weight = 1;
+    particle.weight = 1.;
 
     particles.push_back(particle);
-    weights.push_back(particle.weight);
   }
-
-
 
   // Set is init to true
   is_initialized = true;
@@ -74,28 +71,30 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 
   default_random_engine gen;
 
-  normal_distribution<double> dist_vel(velocity, std_pos[0]);
-  normal_distribution<double> dist_yaw(yaw_rate, std_pos[2]);
-
   for (int i = 0; i < num_particles; i++) {
-
-    velocity = dist_vel(gen);
-    yaw_rate = dist_yaw(gen);
 
     double x = particles[i].x;
     double y = particles[i].y;
     double theta = particles[i].theta;
 
     if (yaw_rate != 0) {
-      x = x + velocity / yaw_rate * (sin(theta + yaw_rate * delta_t) - sin(theta));
-      y = y + velocity / yaw_rate * (cos(theta) - cos(theta + yaw_rate * delta_t));
-      theta = theta + yaw_rate * delta_t;
+      x += velocity / yaw_rate * (sin(theta + yaw_rate * delta_t) - sin(theta));
+      y += velocity / yaw_rate * (cos(theta) - cos(theta + yaw_rate * delta_t));
+      theta += yaw_rate * delta_t;
+    }
+    else {
+      
+      x += velocity * delta_t * cos(theta);
+      y += velocity * delta_t * sin(theta); 
     }
 
-    particles[i].x = x;
-    particles[i].y = y;
-    particles[i].theta = theta;
-  }
+  normal_distribution<double> dist_x(x, std_pos[0]);
+  normal_distribution<double> dist_y(y, std_pos[1]);
+  normal_distribution<double> dist_theta(theta, std_pos[2]);
+
+  particles[i].x = dist_x(gen);
+  particles[i].y = dist_y(gen);
+  particles[i].theta = dist_theta(gen);
 
 }
 
@@ -110,6 +109,31 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   during the updateWeights phase.
    */
 
+  LandmarkObs obs, pred;
+  double min_dist, cur_dist;
+  int id;
+
+  for (int i = 0; i < observations.size(); i++) {
+
+    obs = observations[i];
+
+    min_dist = numeric_limits<double>::max();
+
+    for (int j = 0; j <= predicted.size(); j++) {
+
+      pred = predicted[j];
+
+      cur_dist = dist(obs.x, obs.y, pred.x, pred.y);
+
+      if(cur_dist < min_dist) {
+        min_dist = cur_dist;
+        id = pred.id;
+      }
+    }
+   
+   observations[i].id = id;
+
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
