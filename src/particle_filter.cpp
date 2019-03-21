@@ -119,13 +119,15 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
 
     min_dist = numeric_limits<double>::max();
 
-    for (int j = 0; j <= predicted.size(); j++) {
+    id = -1;
+
+    for (int j = 0; j < predicted.size(); j++) {
 
       pred = predicted[j];
 
       cur_dist = dist(obs.x, obs.y, pred.x, pred.y);
 
-      if(cur_dist < min_dist) {
+      if (cur_dist < min_dist) {
         min_dist = cur_dist;
         id = pred.id;
       }
@@ -153,6 +155,52 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
+  for (int i = 0; i < num_particles; i++) {
+
+    double particle_x = particles[i].x;
+    double particle_y = particles[i].y;
+    double particle_theta = particles[i].theta;
+    double sensor_range_2 = sensor_range * sensor_range;
+    vector<LandmarkObs> nearest_landmarks;
+    LandmarkObs current_landmark; 
+    double dx,dy
+
+    for (int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+
+      current_landmark = map_landmarks.landmark_list[j];
+
+      dx = particle_x - current_landmark.x_f;
+      dy = particle_y - current_landmark.y_f;
+
+      if ( dx*dx + dy*dy <= sensor_range_2) {
+        nearest_landmarks.push_back(current_landmark);
+      }
+
+    }
+
+    vector<LandmarkObs> transformed_observations;
+    LandmarkObs current_observation, transformed_observation;
+
+    for (int j = 0; j < observations.size(); j++) {
+
+      transformed_observation.x = particle_x + observations[j].x 
+                                  * cos(particle_theta) - observations[j].y
+                                  * sin(particle_theta);
+
+      transformed_observation.y = particle_y + observations[j].x 
+                                  * sin(particle_theta) + observations[j].y
+                                  * cos(particle_theta);
+
+      transformed_observation.id = observations[j].id;
+
+      transformed_observations.push_back(transformed_observation); 
+    }
+
+
+
+
+  }
+
 }
 
 void ParticleFilter::resample() {
@@ -162,6 +210,12 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
+
+  vector<Particle> resampled_particles;
+
+  default_random_engine gen;
+
+
 
 }
 
