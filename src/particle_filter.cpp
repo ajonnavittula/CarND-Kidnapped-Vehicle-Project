@@ -182,7 +182,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         landmark = map_landmarks.landmark_list[k];
         landmark_dist = dist(t_observation.x, t_observation.y, landmark.x_f, landmark.y_f);
 
-        if (landmark_dist <= min_dist) {
+        if (landmark_dist < min_dist) {
 
           min_dist = landmark_dist;
           index = k;
