@@ -197,8 +197,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                   + (pow(t_observation.y - landmark.y_f, 2) / (2. * var_y));
 
       weight = norm_term * exp(-exponent);
-
-      if (weight > 0) { particle.weight *= weight; }
+      particle.weight *= weight;
 
       associations.push_back(index + 1);
       sense_x.push_back(t_observation.x);
