@@ -157,6 +157,55 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
+  double std_x = std_landmark[0];
+  double std_y = std_landmark[1];
+  double norm_term = 1 / ( 2 * M_PI * std_x * std_y);
+  Particle particle;
+  double landmark_dist;
+  vector<LandmarkObs> t_observations(observations.size());
+  Map::single_landmark_s landmark;
+  LandmarkObs observation;
+
+  for (int i = 0; i < num_particles; i++) {
+
+    particle = particles[i];
+    particle.weight = 1.;
+
+    vector<int> associations;
+    vector<double> sense_x;
+    vector<double> sense_y;
+
+    vector<LandmarkObs> predictions;
+
+    for (int j = 0; j < map_landmarks.landmark_list.size(); j++) {
+
+      landmark = map_landmarks.landmark_list[j];
+      landmark_dist = dist(landmark.x_f, landmark.y_f, particle.x, particle.y);
+
+      if (landmark_dist <= sensor_range) {
+
+        predictions.push_back(LandmarkObs{landmark.id_i, landmark.x_f, landmark.y_f});
+      }
+
+    }
+
+
+    for (int j = 0; j < observations.size(); j++) {
+
+      observation.id = observations[j].id;
+      observation.x = particle.x + cos(particle.theta) * observations[j].x
+                      - sin(particle.theta) * observations[j].y;
+      observation.y = particle.y + sin(particle.theta) * observations[j].x
+                      + cos(particle.theta) * observations[j].y;
+
+      t_observations[j] = observation;
+    }
+
+    dataAssociation(predictions, t_observations);
+
+
+  }
+
 }
 
 void ParticleFilter::resample() {
